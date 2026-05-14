@@ -1,23 +1,33 @@
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 export default async function handler(req, res) {
 
-  // CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // HEADERS CORS
   res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET,OPTIONS,POST'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization'
+    'Access-Control-Allow-Origin',
+    '*'
   );
 
-  // responder preflight
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'POST, OPTIONS'
+  );
+
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type'
+  );
+
+  // PRE-FLIGHT
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // aceitar apenas POST
+  // VALIDAR POST
   if (req.method !== 'POST') {
     return res.status(405).json({
       error: 'Método não permitido'
@@ -33,10 +43,11 @@ export default async function handler(req, res) {
 
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
         },
 
         body: JSON.stringify({
+
           model: 'gpt-4o-mini',
 
           messages: [
@@ -44,15 +55,15 @@ export default async function handler(req, res) {
               role: 'system',
               content: `
 Você é especialista em manutenção residencial preventiva.
-Ajude usuários com diagnóstico e prevenção de problemas domésticos.
+Ajude usuários a identificar problemas e sugerir prevenção.
 `
             },
-
             {
               role: 'user',
               content: req.body.message
             }
           ]
+
         })
       }
     );
@@ -61,10 +72,10 @@ Ajude usuários com diagnóstico e prevenção de problemas domésticos.
 
     return res.status(200).json(data);
 
-  } catch (e) {
+  } catch (error) {
 
     return res.status(500).json({
-      erro: e.message
+      error: error.message
     });
 
   }
