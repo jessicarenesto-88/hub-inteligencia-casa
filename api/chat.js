@@ -1,61 +1,72 @@
 export default async function handler(req, res) {
 
-res.setHeader('Access-Control-Allow-Origin', 'https://chameotto.com.br');
-res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET,OPTIONS,POST'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization'
+  );
 
-if (req.method === 'OPTIONS') {
-  return res.status(200).end();
-}
+  // responder preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-if(req.method !== 'POST'){
- return res.status(405).json({
-  error:'Método não permitido'
- });
-}
+  // aceitar apenas POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({
+      error: 'Método não permitido'
+    });
+  }
 
-try {
+  try {
 
-const response = await fetch(
-'https://api.openai.com/v1/chat/completions',
-{
-method:'POST',
-headers:{
-'Content-Type':'application/json',
-Authorization:`Bearer ${process.env.OPENAI_API_KEY}`
-},
-body:JSON.stringify({
-model:'gpt-4o-mini',
-messages:[
-{
-role:'system',
-content:`
-Você é a inteligência residencial da empresa.
+    const response = await fetch(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
 
-Ajude usuários com manutenção preventiva,
-diagnóstico de problemas domésticos
-e recomendações consultivas.
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+
+          messages: [
+            {
+              role: 'system',
+              content: `
+Você é especialista em manutenção residencial preventiva.
+Ajude usuários com diagnóstico e prevenção de problemas domésticos.
 `
-},
-{
-role:'user',
-content:req.body.message
-}
-]
-})
-}
-);
+            },
 
-const data = await response.json();
+            {
+              role: 'user',
+              content: req.body.message
+            }
+          ]
+        })
+      }
+    );
 
-res.status(200).json(data);
+    const data = await response.json();
 
-}catch(e){
+    return res.status(200).json(data);
 
-res.status(500).json({
-erro:e.message
-});
+  } catch (e) {
 
-}
+    return res.status(500).json({
+      erro: e.message
+    });
+
+  }
 
 }
